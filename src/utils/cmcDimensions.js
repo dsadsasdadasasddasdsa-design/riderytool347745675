@@ -1,53 +1,87 @@
 // src/utils/cmcDimensions.js
+// Dimensiones y utilidades para imágenes / tablas en reportes.
+//
+// Exportados:
+// - CM_TO_PIXELS
+// - CM_TO_TWIPS
+// - HORIZONTAL_SIZES_CM, VERTICAL_SIZES_CM
+// - getDimensionsFor(size, orientation, scale)
+// - getWordDimensions(orientation)
+// - getCellTargetDimensions(cols, orientation, leftTwips, rightTwips, scale)
 
-// Factor de conversión cm -> pixels (referencia para docx transform)
-export const CM_TO_PIXELS = 37.7952755906;
+export const CM_TO_PIXELS = 37.7952755906; // aproximado: px por cm para canvas
+export const CM_TO_TWIPS = 1440 / 2.54;   // twips por cm (1in=1440 twips, 1in=2.54cm)
 
-const PAGE_WIDTH_CM = 21.0; // A4 width in cm (si tu layout usa otra, ajustar)
-const TWIPS_TO_CM = 2.54 / 1440; // 1 twip = 1/1440 in; convert to cm
+export const HORIZONTAL_SIZES_CM = {
+  normal: { width: 11.0, height: 5.56 },
+  mediana: { width: 8.11, height: 3.96 },
+  grande: { width: 15.7, height: 4.46 }
+};
 
-const BASE_DIMS = {
-  HORIZONTAL: { width: 11.0, height: 5.56 },
-  VERTICAL: { width: 2.97, height: 6.17 }
+export const VERTICAL_SIZES_CM = {
+  normal: { width: 2.97, height: 6.17 },
+  mediana: { width: 3.5, height: 7.86 },
+  grande: { width: 4.96, height: 11.15 }
 };
 
 /**
- * Devuelve dimensiones en PIXELES para ImageRun (docx).
- * orientation: 'horizontal' | 'vertical'
+ * getDimensionsFor(size, orientation, scale)
+ * - size: 'normal'|'mediana'|'grande'
+ * - orientation: 'horizontal'|'vertical'
+ * - scale: multiplicador (1 = 100%)
+ *
+ * Retorna: { width: <px>, height: <px>, widthCm: <cm>, heightCm: <cm> }
  */
-export const getWordDimensions = (orientation = 'horizontal') => {
-  const dims = orientation === 'horizontal' ? BASE_DIMS.HORIZONTAL : BASE_DIMS.VERTICAL;
+export const getDimensionsFor = (size = 'normal', orientation = 'horizontal', scale = 1) => {
+  const key = size || 'normal';
+  const base = orientation === 'vertical' ? (VERTICAL_SIZES_CM[key] || VERTICAL_SIZES_CM.normal) : (HORIZONTAL_SIZES_CM[key] || HORIZONTAL_SIZES_CM.normal);
+  const widthCm = Number((base.width * Number(scale || 1)).toFixed(3));
+  const heightCm = Number((base.height * Number(scale || 1)).toFixed(3));
   return {
-    width: Math.round(dims.width * CM_TO_PIXELS),
-    height: Math.round(dims.height * CM_TO_PIXELS)
+    width: Math.max(1, Math.round(widthCm * CM_TO_PIXELS)),
+    height: Math.max(1, Math.round(heightCm * CM_TO_PIXELS)),
+    widthCm,
+    heightCm
   };
 };
 
 /**
- * Calcula dimensiones objetivo en PIXELES para una celda de tabla dividida en `cols` columnas,
- * teniendo en cuenta márgenes de página (en twips) y ancho de página A4 por defecto.
+ * getWordDimensions(orientation)
+ * - Compatibilidad con código antiguo: devuelve ancho/alto en px usando la "normal" box
+ */
+export const getWordDimensions = (orientation = 'horizontal') => {
+  const base = orientation === 'vertical' ? VERTICAL_SIZES_CM.normal : HORIZONTAL_SIZES_CM.normal;
+  return {
+    width: Math.round(base.width * CM_TO_PIXELS),
+    height: Math.round(base.height * CM_TO_PIXELS)
+  };
+};
+
+/**
+ * getCellTargetDimensions(cols, orientation, leftTwips = 720, rightTwips = 720, scale = 1)
+ * - Calcula dimensiones (px) sugeridas para colocar en una celda de tabla que está dividida
+ *   en `cols` columnas, teniendo en cuenta márgenes (twips) y el ancho de página A4 (21 cm).
  *
- * leftTwips, rightTwips: márgenes de página usados en ReportGenerator (por defecto 720)
- * scale: factor opcional para ampliar la celda (1 = normal, >1 más ancho). Se aplica solo
- *        después de calcular el ancho utilizable por celda y está limitado al ancho utilizable total.
+ * - leftTwips / rightTwips: margenes en twips (por defecto 720 = 0.5in)
+ * - scale: multiplica el ancho de la celda (por si quieres ocupar más espacio)
  *
  * Retorna: { width, height } en píxeles
  */
 export const getCellTargetDimensions = (cols = 1, orientation = 'horizontal', leftTwips = 720, rightTwips = 720, scale = 1) => {
+  const PAGE_WIDTH_CM = 21.0; // A4 width approx usable
+  const TWIPS_TO_CM = 2.54 / 1440; // cm per twip
+
   const leftCm = leftTwips * TWIPS_TO_CM;
   const rightCm = rightTwips * TWIPS_TO_CM;
   const usableWidthCm = Math.max(0.1, PAGE_WIDTH_CM - (leftCm + rightCm));
-  // ancho base por celda
-  const cellWidthCmBase = usableWidthCm / Math.max(1, cols);
 
-  // aplicar scale, pero no exceder el ancho utilizable total
-  const cellWidthCmScaled = Math.min(cellWidthCmBase * scale, usableWidthCm);
+  const baseCellCm = usableWidthCm / Math.max(1, cols);
+  const cellWidthCm = Math.min(baseCellCm * Math.max(1, scale), usableWidthCm);
 
-  const targetWidthPx = Math.round(cellWidthCmScaled * CM_TO_PIXELS);
+  const base = orientation === 'vertical' ? VERTICAL_SIZES_CM.normal : HORIZONTAL_SIZES_CM.normal;
+  const heightRatio = base.height / base.width;
+  const widthPx = Math.max(1, Math.round(cellWidthCm * CM_TO_PIXELS));
+  const heightPx = Math.max(1, Math.round(cellWidthCm * heightRatio * CM_TO_PIXELS));
 
-  const base = orientation === 'horizontal' ? BASE_DIMS.HORIZONTAL : BASE_DIMS.VERTICAL;
-  const heightRatio = base.height / base.width; // mantener proporción del "base box"
-  const targetHeightPx = Math.round(targetWidthPx * heightRatio);
-
-  return { width: targetWidthPx, height: targetHeightPx };
+  return { width: widthPx, height: heightPx };
 };

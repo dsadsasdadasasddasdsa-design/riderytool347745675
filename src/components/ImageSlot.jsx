@@ -23,6 +23,9 @@ const ImageSlot = React.memo(({ slot, onChange, onDelete }) => {
 
   const ticketMatch = useMemo(() => getTicketNumberMatch(slot.title), [slot.title]);
 
+  // Defaults
+  const size = slot.size || 'normal'; // 'normal' | 'mediana' | 'grande'
+
   const processNewFile = useCallback((file) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -30,11 +33,11 @@ const ImageSlot = React.memo(({ slot, onChange, onDelete }) => {
 
     img.onload = () => {
       const orient = img.height > img.width ? 'vertical' : 'horizontal';
+      const next = { ...slot, file, orientation: orient, size: slot.size || 'normal' };
       if ((!slot.title || slot.title.trim() === '') && filenameTicket) {
-        onChange({ ...slot, file, orientation: orient, title: `TICKET ${filenameTicket}` });
-      } else {
-        onChange({ ...slot, file, orientation: orient });
+        next.title = `TICKET ${filenameTicket}`;
       }
+      onChange(next);
       try { URL.revokeObjectURL(url); } catch (e) {}
     };
     img.onerror = () => { try { URL.revokeObjectURL(url); } catch (e) {} ; alert('No se pudo procesar la imagen.'); };
@@ -42,6 +45,7 @@ const ImageSlot = React.memo(({ slot, onChange, onDelete }) => {
   }, [slot, onChange]);
 
   const handleFileChange = (e) => { const file = e.target.files?.[0]; if (file) processNewFile(file); e.target.value = null; };
+
   const handlePasteClick = async () => {
     try {
       let clipboardText = '';
@@ -84,12 +88,15 @@ const ImageSlot = React.memo(({ slot, onChange, onDelete }) => {
 
   const handleRotation = () => onChange({ ...slot, rotation: (slot.rotation + 90) % 360 });
 
-  const size = slot.size || 'normal';
-  const onSizeChange = (e, v) => { if (!v) return; onChange({ ...slot, size: v }); };
+  // size toggle: normal | mediana | grande
+  const onSizeChange = (e, v) => {
+    if (!v) return;
+    onChange({ ...slot, size: v });
+  };
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-      <Paper elevation={0} onPaste={handleInputPaste} sx={{ p: 2, width: '100%', maxWidth: 320, height: 360, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', transition: 'border 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', '&:hover': { border: '1px solid #87fcd9' } }}>
+      <Paper elevation={0} onPaste={handleInputPaste} sx={{ p: 2, width: '100%', maxWidth: 360, height: 420, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', transition: 'border 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', '&:hover': { border: '1px solid #87fcd9' } }}>
         <input ref={pasteInputRef} type="text" style={{ position: 'fixed', top: '-10000px', opacity: 0 }} />
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, gap: 1 }}>
@@ -103,7 +110,7 @@ const ImageSlot = React.memo(({ slot, onChange, onDelete }) => {
           {previewUrl ? <img src={previewUrl} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: `rotate(${slot.rotation}deg)` }} /> : <Box sx={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}><AddPhotoAlternateIcon sx={{ fontSize: 30, mb: 1 }} /><Typography variant="caption" display="block">Arrastra o Pega</Typography></Box>}
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <input type="file" id={`file-${slot.id}`} style={{ display: 'none' }} onChange={handleFileChange} />
             <label htmlFor={`file-${slot.id}`}><Button component="span" size="small" sx={{ color: '#87fcd9', borderColor: '#87fcd9', minWidth: 'auto', px: 1, fontSize: '0.7rem' }} variant="outlined">Abrir</Button></label>
@@ -112,7 +119,7 @@ const ImageSlot = React.memo(({ slot, onChange, onDelete }) => {
 
           <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
             <ToggleButtonGroup value={size} exclusive onChange={onSizeChange} size="small" sx={{ height: 28, bgcolor: 'rgba(255,255,255,0.03)' }}>
-              <ToggleButton value="normal" sx={{ border: 'none', color: '#aaa', '&.Mui-selected': { color: '#87fcd9' } }} title="Normal"><ViewModuleIcon fontSize="small" /></ToggleButton>
+              <ToggleButton value="normal" sx={{ border: 'none', color: '#aaa', '&.Mui-selected': { color: '#87fcd9' } }} title="Pequeña"><ViewModuleIcon fontSize="small" /></ToggleButton>
               <ToggleButton value="mediana" sx={{ border: 'none', color: '#aaa', '&.Mui-selected': { color: '#87fcd9' } }} title="Mediana"><ViewComfyIcon fontSize="small" /></ToggleButton>
               <ToggleButton value="grande" sx={{ border: 'none', color: '#aaa', '&.Mui-selected': { color: '#87fcd9' } }} title="Grande"><ViewComfyIcon fontSize="small" /></ToggleButton>
             </ToggleButtonGroup>

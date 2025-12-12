@@ -2,12 +2,10 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Paper, Box, TextField, Typography, Divider, FormControlLabel, Checkbox } from '@mui/material';
 
 /**
- * CompactCalculator (actualizado visualmente)
- * - Mantiene la lógica previa (calculo, recálculo, cambios), solo ajustes visuales:
- *   * subtítulos en color azul claro (#87fcd9)
- *   * valores con color más visible '#e6faff'
- *   * SURGE (rótulo) en modo 'recalculo' encima de casillas Admin/Dispatch
- *   * Aplica si CALCULO > 1
+ * CompactCalculator (actualizado)
+ * - Corrección lógica: "Aplica" cuando |CALCULO| >= 1 (valor absoluto mayor o igual a 1).
+ * - Inputs en variant="outlined" para evitar labels/títulos que tapen entradas.
+ * - Ajustes visuales para que entradas y subtítulos sean claramente visibles.
  *
  * Props: mode, values, onChange
  */
@@ -148,10 +146,13 @@ export default function CompactCalculator({ mode = 'cash', values = {}, onChange
   };
 
   const inputWidth = mode === 'recalculo' ? 120 : 140;
-  const maxWidth = 520;
+  const maxWidth = 560;
+
+  // Aplica logic: ahora aplica si |CALCULO| >= 1
+  const calcAplica = Math.abs(CALCULO) >= 1;
 
   return (
-    <Paper elevation={0} sx={{ p: 1, borderRadius: '10px', bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)', maxWidth }}>
+    <Paper elevation={0} sx={{ p: 1.25, borderRadius: '10px', bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)', maxWidth }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 1, pt: 1, pb: 0 }}>
         <Typography variant="subtitle1" sx={{ color: '#87fcd9', fontWeight: 900, fontSize: '0.95rem' }}>Calculadora</Typography>
 
@@ -164,27 +165,63 @@ export default function CompactCalculator({ mode = 'cash', values = {}, onChange
         )}
       </Box>
 
-      {/* Inputs */}
+      {/* Inputs (outlined to avoid overlap) */}
       <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'flex-end', px: 1, pt: 0.5, flexWrap: 'wrap' }}>
-        <TextField size="small" variant="filled" value={amountStr} onChange={onAmountChange} placeholder="0.00" label="AMOUNT ADMIN" type="text" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.86rem', padding: '8px 10px', lineHeight: '1', color: '#0f1720' } }} sx={{ bgcolor: 'rgba(255,255,255,0.03)', '& .MuiFilledInput-input': { color: '#081823', fontSize: '0.9rem' }, '& .MuiInputLabel-root': { color: 'rgba(135,252,217,0.9)', fontSize: '0.72rem' }, width: inputWidth, alignSelf: 'flex-end' }} />
+        <TextField
+          size="small"
+          variant="outlined"
+          value={amountStr}
+          onChange={onAmountChange}
+          placeholder="0.00"
+          label="AMOUNT ADMIN"
+          type="text"
+          margin="dense"
+          InputLabelProps={{ shrink: true }}
+          inputProps={{ inputMode: 'decimal', style: { fontSize: '0.86rem', padding: '8px 10px', lineHeight: '1', color: '#081823' } }}
+          sx={{ bgcolor: 'rgba(255,255,255,0.02)', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.04)' }, '& .MuiInputLabel-root': { color: 'rgba(135,252,217,0.9)', fontSize: '0.72rem' }, width: inputWidth, alignSelf: 'flex-end' }}
+        />
 
         {mode === 'cash' && (
-          <TextField size="small" variant="filled" value={cashStr} onChange={onCashChange} placeholder="0.00" label="CASH GIVEN" type="text" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.86rem', padding: '8px 10px', lineHeight: '1', color: '#081823' } }} sx={{ bgcolor: 'rgba(255,255,255,0.03)', '& .MuiFilledInput-input': { color: '#081823', fontSize: '0.9rem' }, '& .MuiInputLabel-root': { color: 'rgba(135,252,217,0.9)', fontSize: '0.72rem' }, width: inputWidth, alignSelf: 'flex-end' }} />
+          <TextField
+            size="small"
+            variant="outlined"
+            value={cashStr}
+            onChange={onCashChange}
+            placeholder="0.00"
+            label="CASH GIVEN"
+            type="text"
+            margin="dense"
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ inputMode: 'decimal', style: { fontSize: '0.86rem', padding: '8px 10px', lineHeight: '1', color: '#081823' } }}
+            sx={{ bgcolor: 'rgba(255,255,255,0.02)', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.04)' }, '& .MuiInputLabel-root': { color: 'rgba(135,252,217,0.9)', fontSize: '0.72rem' }, width: inputWidth, alignSelf: 'flex-end' }}
+          />
         )}
 
         {mode === 'recalculo' && (
           <>
-            <TextField size="small" variant="filled" value={amountRealStr} onChange={onAmountRealChange} placeholder="0.00" label="AMOUNT REAL" type="text" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.86rem', padding: '8px 10px', lineHeight: '1', color: '#081823' } }} sx={{ bgcolor: 'rgba(255,255,255,0.03)', '& .MuiFilledInput-input': { color: '#081823', fontSize: '0.9rem' }, '& .MuiInputLabel-root': { color: 'rgba(135,252,217,0.9)', fontSize: '0.72rem' }, width: inputWidth, alignSelf: 'flex-end' }} />
+            <TextField
+              size="small"
+              variant="outlined"
+              value={amountRealStr}
+              onChange={onAmountRealChange}
+              placeholder="0.00"
+              label="AMOUNT REAL"
+              type="text"
+              margin="dense"
+              InputLabelProps={{ shrink: true }}
+              inputProps={{ inputMode: 'decimal', style: { fontSize: '0.86rem', padding: '8px 10px', lineHeight: '1', color: '#081823' } }}
+              sx={{ bgcolor: 'rgba(255,255,255,0.02)', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.04)' }, '& .MuiInputLabel-root': { color: 'rgba(135,252,217,0.9)', fontSize: '0.72rem' }, width: inputWidth, alignSelf: 'flex-end' }}
+            />
 
-            {surgeAdminEnabled && (<TextField size="small" variant="filled" value={surgeAdminStr} onChange={onSurgeAdminValueChange} placeholder="1.00" label="Admin x" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.78rem', padding: '6px 8px', lineHeight: '1', color: '#081823' } }} sx={{ bgcolor: 'rgba(255,255,255,0.03)', width: 92 }} />)}
-            {surgeDispatchEnabled && (<TextField size="small" variant="filled" value={surgeRealStr} onChange={onSurgeRealValueChange} placeholder="1.00" label="Dispatch /" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.78rem', padding: '6px 8px', lineHeight: '1', color: '#081823' } }} sx={{ bgcolor: 'rgba(255,255,255,0.03)', width: 92 }} />)}
+            {surgeAdminEnabled && (<TextField size="small" variant="outlined" value={surgeAdminStr} onChange={onSurgeAdminValueChange} placeholder="1.00" label="Admin x" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.78rem', padding: '6px 8px', lineHeight: '1', color: '#081823' } }} sx={{ bgcolor: 'rgba(255,255,255,0.02)', width: 92, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.04)' } }} />)}
+            {surgeDispatchEnabled && (<TextField size="small" variant="outlined" value={surgeRealStr} onChange={onSurgeRealValueChange} placeholder="1.00" label="Dispatch /" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.78rem', padding: '6px 8px', lineHeight: '1', color: '#081823' } }} sx={{ bgcolor: 'rgba(255,255,255,0.02)', width: 92, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.04)' } }} />)}
           </>
         )}
 
         {mode === 'cambio' && (
           <>
-            <TextField size="small" variant="filled" value={cashGivenAdminStr} onChange={onCashGivenAdminChange} placeholder="0.00" label="CASH GIVEN ADMIN" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.86rem', padding: '8px 10px', lineHeight: '1', color: '#081823' } }} sx={{ bgcolor: 'rgba(255,255,255,0.03)', width: inputWidth, alignSelf: 'flex-end' }} />
-            <TextField size="small" variant="filled" value={realCashGivenStr} onChange={onRealCashGivenChange} placeholder="0.00" label="REAL CASH GIVEN" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.86rem', padding: '8px 10px', lineHeight: '1', color: '#081823' } }} sx={{ bgcolor: 'rgba(255,255,255,0.03)', width: inputWidth, alignSelf: 'flex-end' }} />
+            <TextField size="small" variant="outlined" value={cashGivenAdminStr} onChange={onCashGivenAdminChange} placeholder="0.00" label="CASH GIVEN ADMIN" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.86rem', padding: '8px 10px', lineHeight: '1', color: '#081823' } }} sx={{ bgcolor: 'rgba(255,255,255,0.02)', width: inputWidth, alignSelf: 'flex-end', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.04)' } }} />
+            <TextField size="small" variant="outlined" value={realCashGivenStr} onChange={onRealCashGivenChange} placeholder="0.00" label="REAL CASH GIVEN" margin="dense" InputLabelProps={{ shrink: true }} inputProps={{ inputMode: 'decimal', style: { fontSize: '0.86rem', padding: '8px 10px', lineHeight: '1', color: '#081823' } }} sx={{ bgcolor: 'rgba(255,255,255,0.02)', width: inputWidth, alignSelf: 'flex-end', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.04)' } }} />
           </>
         )}
       </Box>
@@ -218,7 +255,7 @@ export default function CompactCalculator({ mode = 'cash', values = {}, onChange
             <OutputBox label="COMISIÓN RIDERY" value={REC_COMISION_RIDERY} />
             <OutputBox label="GANANCIA PROVIDER" value={REC_GANANCIA_PROVIDER} />
             <OutputBox label="AMOUNT REAL AJUSTADO" value={AMOUNT_REAL_AJUSTADO} />
-            <OutputBox label="CÁLCULO" value={CALCULO} color={colorForValue(CALCULO)} smallNote={CALCULO > 1 ? 'Aplica ✅' : 'No aplica ❌'} />
+            <OutputBox label="CÁLCULO" value={CALCULO} color={colorForValue(CALCULO)} smallNote={calcAplica ? 'Aplica ✅' : 'No aplica ❌'} />
             <OutputBox label="Movimiento al cliente" value={MOVIMIENTO_CLIENTE} color={colorForValue(MOVIMIENTO_CLIENTE)} />
             <OutputBox label="Movimiento al conductor" value={MOVIMIENTO_CONDUCTOR} color={colorForValue(MOVIMIENTO_CONDUCTOR)} />
           </>

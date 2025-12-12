@@ -1,4 +1,8 @@
 // src/data/cmcData.js
+// Estructura de menú / opciones. Añadimos dos entradas top-level separadas en CATEGORIAS:
+// - "PARÁMETROS DE CATEGORÍA" (vacío)
+// - "CALCULADORA" (vacío)
+// De ese modo aparecen como pestañas independientes en el sidebar.
 export const CMC_STRUCTURE = {
   CONDUCTOR: {
     color: "#1976d2",
@@ -18,11 +22,25 @@ export const CMC_STRUCTURE = {
     options: {
       "CAMBIO DE MONTO CASH (CMC)": { items: ["TICKET CONDUCTOR O USUARIO", "VIAJE DE ADMIN", "PAGO EXTRA (DATOS CONDUCTOR)", "CALCULADORA CMC", "CALCULADORA DISPUTA (SI ES BS)"], driverInfo: true, warning: null },
       "VIAJE REALIZADO CASH": { items: ["TICKET", "VIAJE", "CONVERSACIÓN CON EL RIDER (OPCIONAL)", "VUELTO AL USER", "CALCULADORA VIAJE REALIZADO CASH"], driverInfo: false, warning: null },
-      "RECÁLCULO": { 
-        items: ["TICKET CON EL USUARIO", "VIAJE DE ADMIN", "CALCULADORA", "DISPATCHER", "MAPA DE ADMIN", "ABONO"], 
-        driverInfo: false, 
-        warning: null 
-      }
+      "VIAJE REALIZADO": { items: ["TICKET", "VIAJE DE ADMIN", "CALCULADORA", "NOTAS"], driverInfo: false, warning: null },
+      "RECÁLCULO": { items: ["TICKET CON EL USUARIO", "VIAJE DE ADMIN", "CALCULADORA", "DISPATCHER", "MAPA DE ADMIN", "ABONO"], driverInfo: false, warning: null }
+    }
+  },
+
+  // Top-level: RECALCULO (panel de cálculo independiente)
+  RECALCULO: {
+    color: "#ffb300",
+    options: {
+      "RECÁLCULO": { items: [], driverInfo: false, warning: null }
+    }
+  },
+
+  // Top-level: CATEGORIAS -> separado en dos opciones independientes
+  CATEGORIAS: {
+    color: "#6a1b9a",
+    options: {
+      "PARÁMETROS DE CATEGORÍA": { items: [], driverInfo: false, warning: null },
+      "CALCULADORA": { items: [], driverInfo: false, warning: null }
     }
   }
 };
